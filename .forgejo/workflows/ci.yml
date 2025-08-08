@@ -1,0 +1,62 @@
+name: ci
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: docker
+    env:
+      DOTNET_INSTALL_DIR: ~/.local/bin/dotnet
+    
+    steps:
+      - name: Checkout
+        uses: https://data.forgejo.org/actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Setup .NET
+        uses: https://enduringtech.dev/actions/setup-dotnet-action@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore
+      - name: Build
+        run: dotnet build -c Release --no-restore
+      - name: Publish
+        run: dotnet publish src/FridgeMagnet.Web/FridgeMagnet.Web.csproj -c Release --no-restore --output public
+
+      - name: Upload artifacts
+        uses: https://data.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+        with:
+          name: public
+          path: public/wwwroot
+
+  deploy:
+    needs: build
+    runs-on: docker
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: https://data.forgejo.org/actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Set up git
+        run: |
+          git config user.email forge.svc@enduringtech.dev
+          git config user.name forge[bot]
+
+      - name: Set up pages branch
+        run: git switch --orphan pages
+
+      - name: Download artifacts
+        uses: https://data.forgejo.org/forgejo/download-artifact@d8d0a99033603453ad2255e58720b460a0555e1e # v4
+        with:
+          name: public
+
+      - name: Deploy artifacts
+        run: |
+          git add .
+          git commit -m deployment --author "${{ github.actor }} <${{ github.actor }}@noreply.enduringtech.dev>"
+          git push --force --set-upstream origin pages
