@@ -3,6 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution items", "solution items", "{3FAB08C8-6D89-411A-9D69-4C7E97399820}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		build.sh = build.sh
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2F0928D7-B680-41EB-9BA2-8BD3746A39AB}"
